@@ -1,3 +1,5 @@
-# React-Redux-Starter-Updated
+# modern-react-redux-blog
 
-An updated boilerplate for Stephen Grider's courses.
+Modern React with Redux by Stephen Grider: https://www.udemy.com/react-redux/
+
+Master Branch: version 3

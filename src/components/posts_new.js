@@ -1,3 +1,12 @@
+/*
+Lodash makes JavaScript easier by taking the hassle out of working with arrays, numbers, objects, strings, etc.
+Lodash’s modular methods are great for:
+
+Iterating arrays, objects, & strings
+Manipulating & testing values
+Creating composite functions
+*/
+import _ from 'lodash';
 import React, {Component, PropTypes} from 'react';
 //this is nearly identical to connect function from react-redux library.
 //we'll be using this function to wrap our postsnew component at the export default
@@ -5,6 +14,22 @@ import { reduxForm } from 'redux-form';
 //import createPost action
 import { createPost } from '../actions/index';
 import { Link } from 'react-router';
+ 
+//v2 refactor
+const FIELDS = {
+	title: { 
+		type: 'input',
+		label: 'Title for Post'
+	},
+	categories: {
+		type: 'input',
+		label: 'Enter some categories for this post'
+	},
+	content: {
+		type: 'textarea',
+		label: 'Post Contents'
+	} 
+};
 
 /*
 ADD POST SUMMARY
@@ -44,11 +69,31 @@ class PostsNew extends Component {
 			});
 	}
 
+	//v2 refactor
+	renderField(fieldConfig, field) {
+		//the field helper right here is the object provided by redux form, we get one helper for each field that we declared down in the redux form configuration helper (referencing on title, categories, content)
+		const fieldHelper = this.props.fields[field];
+				{/*we're using template string here then ternary. if fieldHelper.touched and invalid, put in has-danger or else nothing*/}
+				{/*pass the props here on this input "...{title}"*/}
+				{/*where error will show up as we tied up using validate function to reduxForm, touched is a function to know if the user has clicked on the form and didn't do anything then show error or not. if form is invalid, form will not submit*/}
+		return (
+				<div className={`form-group ${fieldHelper.touched && fieldHelper.invalid ? 'has-danger' : '' }`}>
+					<label>{fieldConfig.label}</label>
+					<fieldConfig.type type="text" className="form-control" {...fieldHelper}/>
+					<div className="text-help">
+						{fieldHelper.touched ? fieldHelper.error : ''}
+					</div>
+				</div>
+		);
+	}
+
 	render() {
 		//reduxForm is injecting some helper's for us onto this stop props inside of thiss component here. basically working as a "connect"
 		//handleSubmit gives the forms final values and pass it on actioncreator to this and the action creator will be called for the final values
 		//same as const title = this.props.fields.title or categories or content
-		const { fields:{title,categories,content}, handleSubmit } = this.props;
+		//const { fields:{title,categories,content}, handleSubmit } = this.props;
+		//v2 refactor
+		const { handleSubmit } = this.props;
 
 
 
@@ -58,32 +103,10 @@ class PostsNew extends Component {
 			//pass the createPost props to handleSubmit
 			<form onSubmit={handleSubmit(this.onSubmit.bind(this))}>
 				<h3>Create a new post</h3>
-			{/*we're using template string here then ternary. if title.touched and invalid, put in has-danger or else nothing*/}
-				<div className={`form-group ${title.touched && title.invalid ? 'has-danger' : ''}`}>
-					<label>Title</label>
-				{/*pass the props here on this input "...{title}"*/}
-					<input type="text" className="form-control" {...title}/>
-				{/*where error will show up as we tied up using validate function to reduxForm, touched is a function to know if the user has clicked on the form and didn't do anything then show error or not. if form is invalid, form will not submit*/}
-					<div className="text-help">
-						{title.touched ? title.error : ''}
-					</div>
-				</div>
 
-				<div className={`form-group ${categories.touched && categories.invalid ? 'has-danger' : ''}`}>
-					<label>Categories</label>
-					<input type="text" className="form-control" {...categories}/>
-					<div className="text-help">
-						{categories.touched ? categories.error : ''}
-					</div>
-				</div>
-
-				<div className={`form-group ${content.touched && content.invalid ? 'has-danger' : ''}`}>
-					<label>Content</label>
-					<textarea type="text" className="form-control" {...content}/>
-					<div className="text-help">
-						{content.touched ? content.error : ''}
-					</div>
-				</div>
+			{/*v2 refactor*/}
+				{/*call renderField method and bind.(this) because we are making reference to prop's inside of the helper, "fieldHelper" */}
+				{_.map(FIELDS, this.renderField.bind(this))}
 
 				<button type="submit" className="btn btn-primary">
 					Submit
@@ -102,15 +125,22 @@ class PostsNew extends Component {
 function validate(values) {
 	const errors = {};
 
-	if(!values.title) {
-		errors.title = 'Enter a title';
-	}
-	if(!values.categories) {
-		errors.categories = 'Enter categories';
-	}
-	if(!values.content) {
-		errors.content = 'Enter some content';
-	}
+	//v2 refactor
+	// if(!values.title) {
+	// 	errors.title = 'Enter a title';
+	// }
+	// if(!values.categories) {
+	// 	errors.categories = 'Enter categories';
+	// }
+	// if(!values.content) {
+	// 	errors.content = 'Enter some content';
+	// }
+
+	_.each(FIELDS, (type, field) => {
+		if(!values[field]) {
+			errors[field] = `Enter a ${field}`;
+		}
+	});
 
 	return errors;
 }
@@ -131,6 +161,10 @@ export default reduxForm({
 	//define the array of fields/pieces of data that the form is gonna contain.
 	//to tell redux-form that it needs to create some configuration for these, to watch for these inputs
 	//add validate function to validate fields
-	fields: ['title', 'categories', 'content'],
+
+	//v2_refactor
+	//this will return an array of all the different keys on the fields configuration object which will end up being title, categories ad content an array of strings.
+	//fields: ['title', 'categories', 'content'];
+	fields: _.keys(FIELDS),
 	validate	
 }, null, { createPost })( PostsNew );

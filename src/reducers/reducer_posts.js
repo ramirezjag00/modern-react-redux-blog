@@ -1,22 +1,19 @@
-import _ from 'lodash';
-import { FETCH_POSTS, FETCH_POST, DELETE_POST } from '../actions';
+//import action type
+import {FETCH_POSTS, FETCH_POST} from '../actions/index';
+//define initial state (application state)
+//all = array/list of posts and post with default null show page
+const INITIAL_STATE =  { all: [], post: null};
 
-//default our state to object
-export default function(state = {}, action) {
-	switch (action.type) {
-		case DELETE_POST:
-			return _.omit(state, action.payload);
+//single function for actual reducer, and contains a switch statement for all the different types of actions that we have flowing through
+//two reminders first with redux promise and axios, the data that we care about is going to be available on action.payload.data, and second, our reducer needs to return a new object whenever we return our state
+export default function(state = INITIAL_STATE, action) {
+	switch(action.type) {
 		case FETCH_POST:
-			//long version
-			// const post = action.payload.data;
-			// const newState = { ...state };
-			// newState[post.id] = post;
-			// return newState;
-			//es6
-			return {...state, [action.payload.data.id]:action.payload.data};
+			return { ...state, post: action.payload.data };
 		case FETCH_POSTS:
-			return _.mapKeys(action.payload.data, 'id');
+			return { ...state, all: action.payload.data };
 		default:
-			return state;
+		return state;
 	}
 }
+

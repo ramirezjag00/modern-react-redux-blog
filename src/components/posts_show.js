@@ -1,52 +1,58 @@
-import React, {Component} from 'react';
+import React, {Component, PropTypes} from 'react';
 import {connect} from 'react-redux';
-import { fetchPost, deletePost } from '../actions';
-import { Link } from 'react-router-dom';
-
+import {fetchPost,deletePost} from '../actions/index';
+import { Link } from 'react-router';
 
 class PostsShow extends Component {
-	componentDidMount() {
-		//for network purposes, if the post isn't loaded yet on the browser, load it
-		if(!this.props.post) {
-			const {id} = this.props.match.params;
-			this.props.fetchPost(id);
-		}
+	//import PropTypes and define contextTypes, this gives us access to the router.
+	static contextTypes = {
+		router: PropTypes.object
+	};
+
+	//once this component loads, get this.props.params.id
+	//which contains the data of a post, can be found in network, xhr preview of chrome dev tools
+	componentWillMount() {
+		this.props.fetchPost(this.props.params.id);
 	}
 
+	//eventHandler for delete
 	onDeleteClick() {
-		const {id} = this.props.match.params;
-		this.props.deletePost(id, () => {
-			this.props.history.push("/");
-		});
+		this.props.deletePost(this.props.params.id)
+			.then(() => { 
+				this.context.router.push('/');
+			});
 	}
 
 	render() {
-		//this.props === ownProps
-		const { post } = this.props;
 
-		if(!post) {
-			return <div>Loading...</div>;
-		}
+	const { post } = this.props;
+	// const post = this.props.post;
 
+
+	//if post (this.props.post) is not there yet, show Loading... for a while, else show this.props.post
+	if(!post) {
+		return <div>Loading...</div>;
+	}
+	{/*this.props.params.id (post id), params is a parameter URL and since we name paramater ID we, can get it as .id from the routes.js */}
 		return (
 			<div>
 				<Link to="/">Back to Index</Link>
-				<button
-					className="btn btn-danger pull-xs-right"
-					onClick={this.onDeleteClick.bind(this)}
-				>
-				Delete Post
+				<button onClick={this.onDeleteClick.bind(this)} className="btn btn-danger pull-xs-right">
+					Delete Post
 				</button>
 				<h3>{post.title}</h3>
 				<h6>Categories: {post.categories}</h6>
 				<p>{post.content}</p>
 			</div>
 		);
-	};
+	
+	}
 }
 
-function mapStateToProps({posts}, ownProps) {
-	return {post: posts[ownProps.match.params.id]};
+//for us to be able to get the data that we passed from the forms and show it in the show page
+function mapStateToProps(state) {
+	return {post: state.posts.post};
 }
 
-export default connect(mapStateToProps, {fetchPost, deletePost})(PostsShow);
+//import and define this on the routes file.
+export default connect(mapStateToProps, {fetchPost,deletePost})(PostsShow);
